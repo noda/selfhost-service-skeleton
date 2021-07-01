@@ -1,9 +1,20 @@
-from celery.result import AsyncResult
 from flask import current_app, Blueprint, jsonify, request
+from flask_httpauth import HTTPBasicAuth
+from werkzeug.security import check_password_hash
 
+from app import celery
 import app.services as services
 
+
 bp = Blueprint("all", __name__)
+auth = HTTPBasicAuth()
+
+
+@auth.verify_password
+def verify_password(username, password):
+    users = current_app.config.get('httpauth')
+    if username in users and check_password_hash(users.get(username), password):
+        return username
 
 @bp.route("/")
 def index():
@@ -27,8 +38,9 @@ def not_found(error):
     return jsonify({"msg": "Not Found", "status": 404}), 404
 
 @bp.route("/tasks/<task_id>", methods=["GET"])
+@auth.login_required
 def get_status(task_id):
-    task_result = AsyncResult(task_id)
+    task_result = celery.AsyncResult(task_id)
     result = {
         "task_id": task_id,
         "task_status": task_result.status,
@@ -37,6 +49,7 @@ def get_status(task_id):
     return jsonify(result), 200
 
 @bp.route("/sleep/<int:amount>")
+@auth.login_required
 def sleep(amount):
     async_result = services.sleep.delay(amount, "hello, world")
     return jsonify({"msg": "process started", "task_id": async_result.id, "status": 202}), 202

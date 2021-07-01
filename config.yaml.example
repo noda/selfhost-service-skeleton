@@ -1,2 +1,4 @@
 broker_url: redis://localhost:6379
 result_backend: redis://localhost:6379
+httpauth:
+  myuser: "pbkdf2:sha256:260000$wyq8Mr00ETYzCfQn$166386b90bdb3b65856c25ada6787c4dc49e21b28947bdcd96caac986a0a8037"
