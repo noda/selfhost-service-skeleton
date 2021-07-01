@@ -10,7 +10,7 @@ The requirement for asynchronous requests stems from the fact that some requests
 
 Instead, we propose a two-phase solution where the initial request immediately returns a tracking token, which we can then use to check the state of the request.
 
-![Request example][fig1]
+[Request example][fig1]
 
 ## Dependencies
 
@@ -132,4 +132,4 @@ The solo pool runs inside the worker process. It runs inline, which means there 
 Using solo ensures that only one task is executed at a time on a worker, making it easier to predict the maximum load and memory requirements. Allowing you to handle the pool behaviour to another layer, such as Kubernetes, where you can have multiple instances of the same container.
 
 
-[fig1]: https://raw.githubusercontent.com/noda/selfhost-service-skeleton/main/docs/assets/request_example.png "Request example"
+[fig1]: https://raw.githubusercontent.com/noda/selfhost-service-skeleton/main/docs/assets/request_example.svg "Request example"
