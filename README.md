@@ -2,20 +2,134 @@
 
 The follow code is an example of how to design a basic REST service for use with the NODA Self-host solution.
 
+## The purpose of this skeleton code
+
+To teach a developer how to design an asyncronous REST API.
+
+The requirement for asynchronous requests stems from the fact that some requests takes a long time to execute. Therefore we can not simply execute the code and return the result once the code has finished executing. As this would block the client for far to long and likely result in a timeout.
+
+Instead we propose a two phase solution. Where the initial request emidiately returns a tracking token, which can then be used to check the state of the request.
+
+![Request example][fig1]
 
 ## Dependencies
 
-- Flask
-- Celery 5+
-- Redis
+Luckily the problem we are facing is not a new one and others have already figured out how to solve it.
+
+[Celery](https://github.com/celery/celery) is an open source asynchronous task queue or job queue which is based on distributed message passing.
+
+[Redis](https://github.com/redis/redis) (Remote Dictionary Server) is an in-memory data structure store, used as a distributed, in-memory key-value database, cache and message broker, with optional durability. 
+
+[Flask](https://github.com/pallets/flask) is a micro web framework written in Python. It is classified as a microframework because it does not require particular tools or libraries.
+
+[Flask-HTTPAuth](https://github.com/miguelgrinberg/Flask-HTTPAuth) is a Flask extension that simplifies the use of HTTP authentication with Flask routes.
+
+As always with Python dependencies, there are sub-dependencies for all of the above items. We will not list these here as the above items are the only ones we are directly interested in.
 
 
-## Running the server
+## Project structure
 
-> python server.py
+- `app`: Application source code.
+    + `services`: Add/Remove/Edit the content here as needed for your project.
+        * `sleep.py`: An example service.
+    + `celery_utils.py`: Celery instance helper.
+    + `celery_worker.py`: Source file for the worker.
+    + `factory.py`: Server application factory. 
+    + `routes.py`: Edit this file to add your own routes.
+- `docs`: Documentation.
+- `README.md`: This file.
+- `server.py`: Source file for the server.
+- `config.yaml.example`: Example config file for both the server and the worker.
 
 
-## Running the worker
+## Setting up an environment
 
-> celery -A app.celery_worker.celery worker --loglevel=info --pool=solo
+1. You are going to need a working Redis server. The easiest way is to deploy an instance using Docker.
+    1. Install [Docker](https://docs.docker.com/engine/install) or [Docker Desktop](https://www.docker.com/products/docker-desktop) depending on your platform of choice.
+    2. Start a Redis instance in Docker.
+        
+        ```
+        $ docker run --name redis -p 6379:6379 -d redis 
+        ```
 
+        **NOTE:** This will run a basic Redis instance on your local host. Because of the way Docker exposes ports, the instance can be accessed from your local network. So keep that in mind.
+2. Choose a project path for you code.
+3. Download and extract (into your choosen location) the skeleton code from [https://github.com/noda/selfhost-service-skeleton](https://github.com/noda/selfhost-service-skeleton).
+4. Create a virtual environment (or equivalent) and install all dependencies.
+
+    ```
+    $ virtualenv --python python3 venv
+    $ source venv/bin/activate
+    (venv)$ pip install -r requirements.txt
+    ```
+
+5. Copy the example config file `config.yaml.example` to `config.yaml`. We need to add "user:password" combinations to this file;
+    1. Open the file in a text editor.
+    2. Open a terminal window and active the virtual environment from you project directory.
+    3. Start the Python interpreter and execute the following.
+    
+        ```python
+        >>> from werkzeug.security import generate_password_hash, check_password_hash
+        >>> generate_password_hash('mypassword')
+        'pbkdf2:sha256:150000$N0g7VyeR$8d0d97543987903cb8b9444f18bf437a34280d17e7e6a8ec8556910b0ab5a01c'
+        ```
+
+        Replace `mypassword` with the password you want to use. The string you received from the execution of `generate_password_hash` is your password hash. Copy it.
+
+    4. Edit `config.yaml` so that it follows the following structure;
+
+        ```yaml
+        httpauth:
+            myuser: "pbkdf2:sha256:150000$N0g7VyeR$8d0d97543987903cb8b9444f18bf437a34280d17e7e6a8ec8556910b0ab5a01c"
+        ```
+
+        You can add as many users as you need.
+
+6. In two separate terminals;
+
+    ```
+    (venv)$ python server.py
+    ```
+
+    and
+
+    ```
+    (venv)$ celery -A app.celery_worker.celery worker --loglevel=info --pool=solo
+    ```
+
+
+    The system should now be up and running.
+
+7. In your browser visit the URL [http://127.0.0.1:5000/sleep/10](http://127.0.0.1:5000/sleep/10). This will trigger a 10 second task. Watch the output from the Celery Worker.
+
+## The Celery Worker
+
+### The --pool option
+
+You can choose between processes or threads, using the --pool command line argument. Use a gevent execution pool, spawning 100 green threads (you need to pip-install gevent):
+
+```
+# start celery worker with the gevent pool
+$ celery -A app.celery_worker.celery worker --loglevel=info --pool=gevent --concurrency=100
+```
+
+Don’t worry too much about the details (why are threads green?). We will go into more details if you carry on reading. Celery supports four execution pool implementations:
+
+- prefork
+- solo
+- eventlet
+- gevent
+
+The --pool command line argument is optional. If not specified, Celery defaults to the prefork execution pool.
+
+
+### Why we prefer solo for --pool
+
+The solo pool is a bit of a special execution pool. Strictly speaking, the solo pool is neither threaded nor process-based, it is not even a pool as it is always solo.
+
+The solo pool runs inside the worker process. It runs inline, which means there is no bookkeeping overhead. This makes the solo worker fast. But it also blocks the worker while it executes tasks. Which has some implications when remote-controlling workers.
+
+Using solo ensures that only task is executed on a worker at a time, making it easier to predict the maximum load and maximum memory requirements. Allowing you to handle the pool behaviour to another layer, such as Kubernetes. Where you can have multiple instances of the same container.
+
+
+[fig1]: https://raw.githubusercontent.com/noda/selfhost-service-skeleton/main/docs/assets/request_example.svg "Request example"
