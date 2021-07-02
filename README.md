@@ -109,16 +109,16 @@ As always with Python dependencies, there are sub-dependencies for all of the ab
 
 To create a new task, add a file to the `app/services` path, for example;
 
-- apps/services/my_service.py
-- apps/services/forecaster.py
-- apps/services/emails.py
+- `apps/services/my_service.py`
+- `apps/services/forecaster.py`
+- `apps/services/emails.py`
 
 Take a look at `apps/services/sleep.py` for an example of the structure required.
 
 Once you've written the code, there are two more files that you need to edit;
 
-- services/__init__.py
-- apps/routes.py: URL routes exposed via HTTP
+- `services/__init__.py`: Init file for the services module.
+- `apps/routes.py`: URL routes exposed via HTTP.
 
 Import the function(s) you've created in the `services/__init__.py` file. Then in the `apps/routes.py` file, declare the endpoints you want for your tasks, along with any code required to parse the request into arguments that you can pass along to your function(s).
 
