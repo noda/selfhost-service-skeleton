@@ -120,7 +120,7 @@ Once you've written the code, there are two more files that you need to edit;
 - `services/__init__.py`: Init file for the services module.
 - `apps/routes.py`: URL routes exposed via HTTP.
 
-Import the function(s) you've created in the `services/__init__.py` file. Then in the `apps/routes.py` file, declare the endpoints you want for your tasks, along with any code required to parse the request into arguments that you can pass along to your function(s).
+Import the function(s) you've created from the `services/__init__.py` file to the scope of the `app/routes.py` file. Then in the `apps/routes.py` file, declare the endpoints you want for your tasks, along with any code required to parse the request into arguments that you can pass along to your function(s).
 
 Once again, take a look at `apps/services/sleep.py` and `apps/routes.py` for details about how to do this.
 
