@@ -14,7 +14,7 @@ Instead, we propose a two-phase solution where the initial request immediately r
 
 ## Dependencies
 
-Luckily the problem we face is not a new one, and others have already figured out how to solve it.
+Luckily, the problem we face is not new, and others have already figured out how to solve it.
 
 [Celery](https://github.com/celery/celery) is an open-source asynchronous task queue or job queue based on distributed message passing.
 
@@ -39,7 +39,8 @@ As always with Python dependencies, there are sub-dependencies for all of the ab
 - `docs`: Documentation.
 - `README.md`: This file.
 - `server.py`: Source file for the server.
-- `config.yaml.example`: Example config file for both the server and the worker.
+- `server_config.yaml.example`: Example config file for the server.
+- `worker_config.yaml.example`: Example config file for the worker.
 
 
 ## Setting up an environment
@@ -63,7 +64,7 @@ As always with Python dependencies, there are sub-dependencies for all of the ab
     (venv)$ pip install -r requirements.txt
     ```
 
-5. Copy the example config file `config.yaml.example` to `config.yaml`. We need to add "user:password" combinations to this file;
+5. Copy the example config file `server_config.yaml.example` to `server_config.yaml`. We need to add "user:password" combinations to this file;
     1. Open the file in a text editor.
     2. Open a terminal window and activate the virtual environment from your project directory.
     3. Start the Python interpreter and execute the following.
@@ -76,7 +77,7 @@ As always with Python dependencies, there are sub-dependencies for all of the ab
 
         Replace `mypassword` with the password you want to use. The string you received from the execution of `generate_password_hash` is your password hash. Copy it.
 
-    4. Edit `config.yaml` so that it follows the following structure;
+    4. Edit `server_config.yaml` so that it follows the following structure;
 
         ```yaml
         httpauth:
@@ -85,7 +86,9 @@ As always with Python dependencies, there are sub-dependencies for all of the ab
 
         You can add as many users as you need.
 
-6. In two separate terminals;
+6. Copy the example config file `worker_config.yaml.example` to `worker_config.yaml`.
+
+7. In two separate terminals;
 
     ```
     (venv)$ python server.py
@@ -100,7 +103,26 @@ As always with Python dependencies, there are sub-dependencies for all of the ab
 
     The system should now be up and running.
 
-7. In your browser, visit the URL [http://127.0.0.1:5000/sleep/10](http://127.0.0.1:5000/sleep/10). This will trigger a 10-second task. Then, watch the output from the Celery Worker.
+8. In your browser, visit the URL [http://127.0.0.1:5000/sleep/10](http://127.0.0.1:5000/sleep/10). This action will trigger a 10-second task. Then, watch the output from the Celery Worker.
+
+## Adding a new task
+
+To create a new task, add a file to the `app/services` path, for example;
+
+- apps/services/my_service.py
+- apps/services/forecaster.py
+- apps/services/emails.py
+
+Take a look at `apps/services/sleep.py` for an example of the structure required.
+
+Once you've written the code, there are two more files that you need to edit;
+
+- services/__init__.py
+- apps/routes.py: URL routes exposed via HTTP
+
+Import the function(s) you've created in the `services/__init__.py` file. Then in the `apps/routes.py` file, declare the endpoints you want for your tasks, along with any code required to parse the request into arguments that you can pass along to your function(s).
+
+Once again, take a look at `apps/services/sleep.py` and `apps/routes.py` for details about how to do this.
 
 ## The Celery Worker
 
