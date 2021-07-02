@@ -1,6 +1,7 @@
 from flask import current_app, Blueprint, jsonify, request
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import check_password_hash
+from celery import chain
 
 from app import celery
 import app.services as services
@@ -52,4 +53,10 @@ def get_status(task_id):
 @auth.login_required
 def sleep(amount):
     async_result = services.sleep.delay(amount, "hello, world")
+    return jsonify({"msg": "process started", "task_id": async_result.id, "status": 202}), 202
+
+@bp.route("/math/<int:a>/<int:b>")
+@auth.login_required
+def maths(a, b):
+    async_result = chain(services.add.s(a, b), services.add.s(100)).delay()
     return jsonify({"msg": "process started", "task_id": async_result.id, "status": 202}), 202
