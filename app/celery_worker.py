@@ -5,7 +5,7 @@ from app import celery
 from app.factory import create_app
 from app.celery_utils import init_celery
 
-config_filename = os.environ.get("CONFIG_FILENAME", "config.yaml")
+config_filename = os.environ.get("CONFIG_FILENAME", "worker_config.yaml")
 config_content = ""
 
 with open(config_filename, "r") as fd:
