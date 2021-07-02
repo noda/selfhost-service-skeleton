@@ -1,5 +1,3 @@
-import time
-
 from app import celery
 
 @celery.task(name="maths.add")
