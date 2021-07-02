@@ -6,7 +6,7 @@ The following code is an example of how to design a basic REST service for use w
 
 To teach a developer how to design an asynchronous REST API.
 
-The requirement for asynchronous requests stems from the fact that some requests take a long time to execute. Therefore we can not simply execute the code and return the result once the code has finished running. This solution would block the client for far too long and likely result in a timeout.
+The requirement for asynchronous requests stems from the fact that some requests take a long time to execute. Therefore we can not simply execute the code and return the result once the code has finished running, as such a solution would block the client for far too long and likely result in a timeout.
 
 Instead, we propose a two-phase solution where the initial request immediately returns a tracking token, which we can then use to check the state of the request.
 
